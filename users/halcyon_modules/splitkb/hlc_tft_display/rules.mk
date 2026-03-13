@@ -17,3 +17,18 @@ SRC += $(USER_PATH)/splitkb/hlc_tft_display/graphics/numbers/0.qgf.c \
 	   $(USER_PATH)/splitkb/hlc_tft_display/graphics/numbers/8.qgf.c \
 	   $(USER_PATH)/splitkb/hlc_tft_display/graphics/numbers/9.qgf.c \
 	   $(USER_PATH)/splitkb/hlc_tft_display/graphics/numbers/undef.qgf.c
+
+# Suspend animation frames
+SRC += $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_01.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_02.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_03.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_04.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_05.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_06.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_07.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_08.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_09.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_10.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_11.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_12.qgf.c \
+       $(USER_PATH)/splitkb/hlc_tft_display/frames_cropped/frame_13.qgf.c

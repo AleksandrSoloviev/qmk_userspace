@@ -23,6 +23,20 @@
 #include "graphics/numbers/9.qgf.h"
 #include "graphics/numbers/undef.qgf.h"
 
+#include "frames_cropped/frame_01.qgf.h"
+#include "frames_cropped/frame_02.qgf.h"
+#include "frames_cropped/frame_03.qgf.h"
+#include "frames_cropped/frame_04.qgf.h"
+#include "frames_cropped/frame_05.qgf.h"
+#include "frames_cropped/frame_06.qgf.h"
+#include "frames_cropped/frame_07.qgf.h"
+#include "frames_cropped/frame_08.qgf.h"
+#include "frames_cropped/frame_09.qgf.h"
+#include "frames_cropped/frame_10.qgf.h"
+#include "frames_cropped/frame_11.qgf.h"
+#include "frames_cropped/frame_12.qgf.h"
+#include "frames_cropped/frame_13.qgf.h"
+
 static const char *caps =        "Caps";
 static const char *num =         "Num";
 static const char *scroll =      "Scroll";
@@ -40,6 +54,79 @@ painter_device_t lcd_surface;
 
 led_t last_led_usb_state = {0};
 layer_state_t last_layer_state = {0};
+
+static const uint8_t *const suspend_frames[] = {
+    gfx_frame_01,
+    gfx_frame_02,
+    gfx_frame_03,
+    gfx_frame_04,
+    gfx_frame_05,
+    gfx_frame_06,
+    gfx_frame_07,
+    gfx_frame_08,
+    gfx_frame_09,
+    gfx_frame_10,
+    gfx_frame_11,
+    gfx_frame_12,
+    gfx_frame_13,
+};
+
+#define SUSPEND_FRAME_INTERVAL_MS 100U
+#define SUSPEND_ANIMATION_TIMEOUT_MS (15UL * 60UL * 1000UL)
+
+static bool suspend_animation_active = false;
+static bool suspend_display_is_off = false;
+static uint32_t suspend_animation_started = 0;
+static uint32_t suspend_frame_last_draw = 0;
+static uint8_t suspend_frame_index = 0;
+
+static void suspend_display_power_down_now(void) {
+    if (!suspend_display_is_off) {
+        qp_power(lcd, false);
+        suspend_display_is_off = true;
+    }
+}
+
+static void suspend_animation_start(void) {
+    suspend_animation_active = true;
+    suspend_display_is_off = false;
+    suspend_animation_started = timer_read32();
+    suspend_frame_last_draw = 0;
+    suspend_frame_index = 0;
+    qp_power(lcd, true);
+}
+
+static void suspend_animation_stop(void) {
+    suspend_animation_active = false;
+    suspend_display_is_off = false;
+}
+
+static void suspend_animation_tick(void) {
+    if (!suspend_animation_active) {
+        return;
+    }
+
+    if (timer_elapsed32(suspend_animation_started) >= SUSPEND_ANIMATION_TIMEOUT_MS) {
+        suspend_animation_active = false;
+        suspend_display_power_down_now();
+        return;
+    }
+
+    if (timer_elapsed32(suspend_frame_last_draw) < SUSPEND_FRAME_INTERVAL_MS) {
+        return;
+    }
+
+    painter_image_handle_t frame = qp_load_image_mem(suspend_frames[suspend_frame_index]);
+    if (frame != NULL) {
+        qp_drawimage(lcd_surface, 0, 0, frame);
+        qp_close_image(frame);
+        qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
+        qp_flush(lcd);
+    }
+
+    suspend_frame_last_draw = timer_read32();
+    suspend_frame_index = (suspend_frame_index + 1) % (sizeof(suspend_frames) / sizeof(suspend_frames[0]));
+}
 
 #define GRID_WIDTH 27
 #define GRID_HEIGHT 48
@@ -245,11 +332,12 @@ void update_display(void) {
 
 // Called from halcyon.c
 void module_suspend_power_down_kb(void) {
-    qp_power(lcd, false);
+    suspend_animation_start();
 }
 
 // Called from halcyon.c
 void module_suspend_wakeup_init_kb(void) {
+    suspend_animation_stop();
     qp_power(lcd, true);
 }
 
@@ -284,6 +372,11 @@ bool module_post_init_kb(void) {
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
     if(!display_module_housekeeping_task_user(second_display)) { return false; }
+
+    if (suspend_animation_active) {
+        suspend_animation_tick();
+        return true;
+    }
 
     if(second_display) {
         static uint32_t last_draw = 0;
