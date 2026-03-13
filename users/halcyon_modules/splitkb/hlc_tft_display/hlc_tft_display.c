@@ -76,6 +76,7 @@ static const uint8_t *const suspend_frames[] = {
 
 static bool suspend_animation_active = false;
 static bool suspend_display_is_off = false;
+static bool force_redraw = false;
 static uint32_t suspend_animation_started = 0;
 static uint32_t suspend_frame_last_draw = 0;
 static uint8_t suspend_frame_index = 0;
@@ -83,6 +84,7 @@ static uint8_t suspend_frame_index = 0;
 static void suspend_display_power_down_now(void) {
     if (!suspend_display_is_off) {
         qp_power(lcd, false);
+        backlight_suspend();
         suspend_display_is_off = true;
     }
 }
@@ -269,6 +271,12 @@ void update_display(void) {
     static bool first_run_led = false;
     static bool first_run_layer = false;
 
+    if (force_redraw) {
+        first_run_led = false;
+        first_run_layer = false;
+        force_redraw = false;
+    }
+
     if( first_run_layer == false) {
         // Load fonts
         Retron27 = qp_load_font_mem(font_Retron2000_27);
@@ -339,6 +347,15 @@ void module_suspend_power_down_kb(void) {
 void module_suspend_wakeup_init_kb(void) {
     suspend_animation_stop();
     qp_power(lcd, true);
+    // Clear the surface and force a full redraw after wakeup
+    qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
+    force_redraw = true;
+    // Mark all Game of Life cells as changed so the grid fully redraws
+    for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < GRID_WIDTH; x++) {
+            changed_grid[y][x] = true;
+        }
+    }
 }
 
 // Called from halcyon.c

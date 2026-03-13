@@ -46,6 +46,7 @@ module_t module;
 #endif
 
 bool backlight_off = false;
+static bool display_idle = false;
 
 // Timeout handling
 void backlight_wakeup(void) {
@@ -112,14 +113,19 @@ void housekeeping_task_kb(void) {
         display_module_housekeeping_task_kb(module_master == hlc_tft_display);
     }
 
-    // Backlight feature
+    // Backlight & display idle timeout feature
     if (last_input_activity_elapsed() <= HLC_BACKLIGHT_TIMEOUT) {
-        if (backlight_off) {
+        if (display_idle) {
+            display_idle = false;
             backlight_wakeup();
+            module_suspend_wakeup_init_kb();
         }
     } else {
-        if (!backlight_off) {
-            backlight_suspend();
+        if (!display_idle) {
+            display_idle = true;
+            // Start suspend animation — backlight stays on so animation is visible.
+            // The animation will turn off the display after SUSPEND_ANIMATION_TIMEOUT_MS.
+            module_suspend_power_down_kb();
         }
     }
 

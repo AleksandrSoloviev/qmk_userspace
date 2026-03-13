@@ -30,5 +30,6 @@
 #undef BACKLIGHT_PIN
 #define BACKLIGHT_PIN GP27
 
-// Timeout configuration
-#define QUANTUM_PAINTER_DISPLAY_TIMEOUT HLC_BACKLIGHT_TIMEOUT
+// Disable QP's built-in display timeout — we handle it manually
+// via suspend animation in housekeeping_task
+#define QUANTUM_PAINTER_DISPLAY_TIMEOUT 0
